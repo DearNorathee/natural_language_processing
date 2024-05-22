@@ -1,6 +1,197 @@
 from typing import Literal, Union
-# ########################################### Add function in Apr 13,24 ###########################################
 
+
+def nlp_score(
+        model,
+        vectorizer, 
+        wb_path, 
+        input_sheet_name = "Sheet1" , 
+        col_input='portuguese', 
+        print_index = True,
+        inplace=True,
+        close_after_scored = False,
+        plot_confusion = False,
+        y_name = 'usefulness'
+        ):
+    """
+    !!! signature function
+    # only works for Excel file for now
+    
+    
+    Scores text data using a specified NLP model and vectorizer, and writes the results to an Excel workbook.
+
+    This function reads data from a specified sheet in an Excel workbook, applies an NLP model to a specified column, 
+    and writes the predictions back to the workbook. It optionally plots a confusion matrix for the scoring.
+
+    Parameters:
+    model: Trained machine learning model used for prediction.
+    vectorizer: Text vectorizer used to transform the text data.
+    wb_path: Path to the Excel workbook or an xlwings Book object.
+    input_sheet_name (str, optional): Name of the sheet in the workbook to read data from. Defaults to "Sheet1".
+    col_input (str, optional): Name of the column in the sheet to apply the model to. Defaults to 'portuguese'.
+    print_index (bool, optional): Whether to print the DataFrame index in the Excel sheet. Defaults to True.
+    inplace (bool, optional): If True, writes results in the same sheet; otherwise, creates a new sheet. Defaults to True.
+    close_after_scored (bool, optional): Whether to close the workbook after processing. Defaults to False.
+    plot_confusion (bool, optional): If True, plots a confusion matrix of the results. Defaults to True.
+    y_name (str, optional): The name of the target column for plotting the confusion matrix. Defaults to 'usefulness'.
+
+    Notes:
+    - This function currently only works with Excel files.
+    - The workbook is saved after processing.
+    - If `plot_confusion` is True, the function attempts to plot a confusion matrix and may fail silently with a ValueError 
+      if the necessary data is not available.
+    - The function requires the 'xlwings' and 'pandas' libraries.
+    - Custom library 'lib02_dataframe' is used for reading Excel data.
+    
+    
+    """
+    import xlwings as xw
+    import pandas as pd
+    from pathlib import Path
+    import sys
+    sys.path.append(r"C:\Users\Heng2020\OneDrive\Python MyLib")
+    import lib02_dataframe as ds
+    # Open the workbook
+    
+    if isinstance(wb_path, (str,Path)):
+        wb = xw.Book(wb_path)
+    elif isinstance(wb_path, (str,xw.Book)):
+        wb = wb_path
+        
+    ws_names = [sheet.name for sheet in wb.sheets]
+
+    # Read data from the input sheet
+    input_sheet = wb.sheets[input_sheet_name]
+    df = ds.pd_read_excel(df_path,input_sheet_name,header = 1)
+
+    # Apply the model to the specified column
+    prediction = nlp_predict(df,model,vectorizer, col_input= col_input,inplace=False)
+    
+    labels = ['Not Useful','Already Knew','Normal','Useful']
+    
+    if plot_confusion:
+        try:
+            plot_confusion_matrix(prediction[y_name], prediction['prediction'], 'Scoring metrics',labels,max_percentile=90)
+        except ValueError:
+            pass
+
+    # Decide whether to replace data in the same sheet or in a new sheet
+    if inplace:
+        scored_sheet = input_sheet
+    else:
+        ws_scored_name = input_sheet_name + "_scored"
+        if ws_scored_name in ws_names:
+            scored_sheet = wb.sheets[ws_scored_name]
+        else:
+            scored_sheet = wb.sheets.add(ws_scored_name)
+
+    # Paste the scored result into the workbook
+    scored_sheet.range('A1').options(index=print_index).value = prediction
+
+    # Save the workbook
+    wb.save()
+    
+    if close_after_scored:
+        # Optionally, close the workbook
+        wb.close()
+
+def plot_confusion_matrix(y_true, y_pred, title, labels=None,max_percentile = 80, adjusted = False, y_accept = None):
+    # Generate the confusion matrix
+    # if adjusted = True use adjusted confusion matrix
+    import numpy as np
+    import seaborn as sns
+    from sklearn.metrics import confusion_matrix
+    import matplotlib.pyplot as plt
+    
+    if adjusted:
+        cm = confusion_matrix_adj(y_true, y_pred,y_accept, labels=labels)
+    else:
+        cm = confusion_matrix(y_true, y_pred, labels=labels)
+
+    # Calculate the 80th percentile of the values in the confusion matrix
+    vmax = np.percentile(cm, max_percentile)
+
+    plt.figure(figsize=(8, 6))
+    
+    # Determine xticklabels and yticklabels based on whether labels are provided
+    if labels is None:
+        xticklabels = y_true.unique()
+        yticklabels = y_true.unique()
+    else:
+        xticklabels = labels
+        yticklabels = labels
+
+    # Create the heatmap
+    sns.heatmap(cm, annot=True, fmt='g', cmap='Blues', vmax=vmax, xticklabels=xticklabels, yticklabels=yticklabels)
+
+    plt.title(title)
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.show()
+
+def confusion_matrix_adj(y_true, y_accept, y_pred, labels=None):
+    from sklearn.metrics import confusion_matrix
+    import numpy as np
+    # FIX seems like the function is still not correct 
+    # please do the recon before using this function
+    # unusable for now
+    
+    """
+    Compute a confusion matrix with adjustments.
+
+    Parameters:
+    y_true: Array-like of true class labels.
+    y_accept: Array-like of acceptable class labels.
+    y_pred: Array-like of predicted class labels.
+    labels: List of label names corresponding to the classes (optional).
+
+    Returns:
+    Confusion matrix as a 2D array.
+    """
+    # Adjust predictions
+    adjusted_pred = []
+    for true, accept, pred in zip(y_true, y_accept, y_pred):
+        if pred == true or pred == accept:
+            adjusted_pred.append(pred)
+        # elif (accept is None) or ((accept is np.nan)):
+        #     adjusted_pred.append(true)
+        else:
+            adjusted_pred.append(true)  # Considered as predicted 'true', actual 'true'
+
+    # Compute confusion matrix
+    return confusion_matrix(y_true, adjusted_pred, labels=labels)
+
+
+def nlp_predict(data,model,tfidf_vectorizer,col_input = 'portuguese_lemma', inplace = True):
+    import pandas as pd
+    # vocab03 = tfidf_vectorizer.vocabulary_
+
+    if isinstance(data, pd.Series):
+        data_in = data.copy()
+    elif isinstance(data, pd.DataFrame):
+        data_in = data[col_input]
+        
+    data_tfidf = tfidf_vectorizer.transform(data_in)
+    prediction = model.predict(data_tfidf)
+    
+    # vocab04 = tfidf_vectorizer.vocabulary_
+    if isinstance(data, pd.Series):
+        out_df = pd.DataFrame({'sentence':data, 'prediction':prediction})
+        return out_df
+    
+    elif isinstance(data, pd.DataFrame):
+        if inplace:
+            data['prediction'] = prediction
+            return data
+        else:
+            out_data = data.copy()
+            out_data['prediction'] = prediction
+            return out_data
+    
+    
+    return out_df
+
+# ########################################### Add function in Apr 13,24 ###########################################
 def detect_language(input_text, 
                     return_as: Literal["full_name","2_chr_code","3_chr_code","langcodes_obj"] = "full_name"):
     from langdetect import detect
@@ -105,7 +296,7 @@ def concat_vocab_df(df1,df2, plot = True):
     """
     import pandas as pd
     import seaborn as sns
-    
+    import matplotlib.pyplot as plt
     
     def flatten(list_of_lists):
         """Flatten a 2D list to 1D"""
