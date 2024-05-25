@@ -49,8 +49,8 @@ def nlp_score(
     import pandas as pd
     from pathlib import Path
     import sys
-    sys.path.append(r"C:\Users\Heng2020\OneDrive\Python MyLib")
-    import lib02_dataframe as ds
+
+    import dataframe_short as ds
     # Open the workbook
     
     if isinstance(wb_path, (str,Path)):
@@ -380,6 +380,7 @@ def nlp_word_freq_all(data_path,model,plot = True):
     """
     import warnings
     import pandas as pd
+    import py_string_tool as pst
     # to slient to warning creating from sns ploting
     warnings.filterwarnings("ignore", category=FutureWarning)
     
@@ -399,7 +400,7 @@ def nlp_word_freq_all(data_path,model,plot = True):
             text_list2 = []
             
             for sentence in text_list:
-                if not_empty_string(sentence):
+                if pst.not_empty_string(sentence):
                     if not sentence.endswith("."):
                         sentence_with_dot = sentence.replace("\n", "") + "."
                     else:
