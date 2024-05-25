@@ -1,4 +1,7 @@
 from typing import Literal,Union,List
+import pandas as pd
+from pathlib import Path
+
 #%%
 def lang_voice_name():
     """
@@ -227,6 +230,7 @@ def create_audio_folder(excel_path,sheet_name):
     # NOT DONE
     import excel_tool as xt
     import excel_tool.worksheet as ws
+    import dataframe_short as ds
     vocab_df = ds.pd_read_excel(excel_path,sheet_name = sheet_name)
     vocab_dict_df = ds.pd_split_into_dict_df(vocab_df,add_prefix_index = True)
     
