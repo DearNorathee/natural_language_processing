@@ -55,7 +55,7 @@ def test_detect_language():
     detect_language(texts)
 
 def test_audio_from_df():
-    
+    import dataframe_short as ds
     excel_path = r"C:\Users\Heng2020\OneDrive\D_Documents\_Learn Languages\_LearnLanguages 02 Main\Duolingo\Duolingo French 02.xlsm"
     sheet_name = "python_test"
     out_folder = r"C:\Users\Heng2020\OneDrive\D_Code\Python\Python NLP\NLP 02\01 OutputData\test_audio_from_df"
