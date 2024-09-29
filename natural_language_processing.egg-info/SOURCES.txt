@@ -1,4 +1,11 @@
 setup.py
+natural_language_processing/__init__.py
+natural_language_processing/cant_use_nlp.py
+natural_language_processing/conjugator_pt.py
+natural_language_processing/fix_bug_nlp.py
+natural_language_processing/local_tts.py
+natural_language_processing/nlp_01.py
+natural_language_processing/word_freq.py
 natural_language_processing.egg-info/PKG-INFO
 natural_language_processing.egg-info/SOURCES.txt
 natural_language_processing.egg-info/dependency_links.txt
