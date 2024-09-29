@@ -8,7 +8,7 @@ from pathlib import Path
 warnings.filterwarnings("ignore", message="'has_mps' is deprecated") # Suppress INFO and WARNING from spacy
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'  # Suppress INFO and WARNING from spacy
 import spacy
-def nlp_word_freq_all(
+def word_freq_all(
         data_path: Union[str,Path]
         ,model: spacy.language
         ,plot:bool = True):
@@ -23,6 +23,12 @@ def nlp_word_freq_all(
     assume that data_path is the string of my generated csv from srt
     must have the column called sentence
     all - means include every word not just unique infinitive 
+
+    Usage:
+
+        warnings.filterwarnings("ignore", category=UserWarning, module="spacy")
+        nlp_large = spacy.load("pt_core_news_lg")
+        df1 = nlp.word_freq_all(path_S06E01, nlp_large)
 
     Returns
     -------
