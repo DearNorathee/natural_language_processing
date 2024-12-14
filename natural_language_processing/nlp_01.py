@@ -491,7 +491,7 @@ def nlp_make_tfidf_matrix(X,text_col, ngram_range =(1,1),stop_words = [], max_df
     elif isinstance(X,pd.DataFrame):
         X_in = X[text_col]
     else:
-        raise Exception("X should only pd.Series or pd.DataFrame as of now")
+        raise TypeError("X should only pd.Series or pd.DataFrame as of now")
     
     tfidf_vectorizer = TfidfVectorizer(stop_words=stop_words,ngram_range=ngram_range,max_df=max_df)
     X_tfidf = tfidf_vectorizer.fit_transform(X_in)

@@ -46,13 +46,13 @@ def create_audio(text:str,language:str = "auto",filename = "", output_folder = "
         
     engine = engine_by_lang(language_in)
     if engine is False:
-        raise Exception(f"Doesn't have '{language_in}' in the keyboard system. Please download this language in your keyboard. ")
+        raise ValueError(f"Doesn't have '{language_in}' in the keyboard system. Please download this language in your keyboard. ")
     
     if isinstance(text, list):
         
         if isinstance(filename, list):
             if len(text) != len(filename):
-                raise Exception(f"The length of text is: {len(text)}. The length of filename is {len(filename)}. Make sure they have the same length.")
+                raise ValueError(f"The length of text is: {len(text)}. The length of filename is {len(filename)}. Make sure they have the same length.")
             
         n_digit = len(str(len(text)))
             
@@ -200,7 +200,7 @@ def audio_from_df(df: pd.DataFrame,
     
     engine = engine_by_lang(language_in)
     if engine is False:
-        raise Exception(f"Doesn't have '{language_in}' in the keyboard system. Please download this language in your keyboard. ")
+        raise ValueError(f"Doesn't have '{language_in}' in the keyboard system. Please download this language in your keyboard. ")
     
     df_copy = df.copy()
     
